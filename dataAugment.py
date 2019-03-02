@@ -65,6 +65,24 @@ def image_GaussianNoise(imageDir_path = "", trainLable_path = "", outputpath = "
         outputpath: the path of the flipped pic and train label
     """
 
+def image_moveUp(imageDir_path = "", trainLable_path = "", outputpath = "", distance = 0):
+    """
+    move up ur pic with the distance
+    """
 
+def image_moveDown(imageDir_path = "", trainLable_path ="", outputpath= "", distance = 0):
+    """
+    move down ur pic with distance 
+    """
+
+def image_moveLeft(imageDir_path = "", trainLable_path = "", outputpath = "", distance = 0):
+    """
+    move left ur pic with distance
+    """
+
+def image_moveRight(imageDir_path = "", trainLable_path = "", outputpath ="", distance = 0):
+    """
+    move right ur pic with distance
+    """
 if __name__ == "__main__":
     fire.Fire()
