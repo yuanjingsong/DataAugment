@@ -28,14 +28,14 @@ def image_flip(imageDir_path="", trainLabel_path="", outputpath="") :
 
     for id in ids:
         width = image_data[id].shape[1]
-        newImages[id+"flipped"] = np.flipud(image_data[id])
+        newImages[id+"flipped"] = np.fliplr(image_data[id])
         for bounding in bounding_boxs[id]:
             if (id+"flipped") not in newBounding_boxes:
                 newBounding_boxes[id+"flipped"] = []
             num = str(width - int(bounding.split()[0]))
             num1 = str(bounding.split()[1])
             num2 = str(width - int(bounding.split()[2]))
-            num3 - str(bounding.split()[3])
+            num3 = str(bounding.split()[3])
             new_pd_data.append({"ID":id, "Detection" : " ".join((num, num1, num2, num3))})
 
     output_csv_path = outputpath + "flipped_label.csv"
@@ -45,7 +45,6 @@ def image_flip(imageDir_path="", trainLabel_path="", outputpath="") :
         name = re.split(r".jpg|.png|.jpeg ", id)[0]
         print(outputpath + name + "-flipped.jpg")
         cv2.imwrite(newImages[id+"flipped"], outputpath+name+"-flipped.jpg")
-
 
 
 def image_udflip(imageDir_path="", trainLabel_path="", outputpath="") :
@@ -58,7 +57,32 @@ def image_udflip(imageDir_path="", trainLabel_path="", outputpath="") :
         trainLabel_path: the path of the train label path
         outputpath: the path of the flipped pic and train label
     """
+    bounding_boxs = get_bounding_box(trainLabel_path)
+    image_data = read_images(imageDir_path)
+    ids = get_ids(imageDir_path)
 
+    newImages = {}
+    new_pd_data = []
+
+    for id in ids:
+        height = image_data[id].shape[0]
+        newImages[id+"-updown"] = np.flipud(image_data[id])
+        for bounding in bounding_boxs[id]:
+            if (id+"-updown") not in newBounding_boxes:
+                newBounding_boxes[id+"-updown"] = []
+        num = str(bounding_boxs.split()[0])
+        num1 = str(height - int(bounding.split()[1]))
+        num2 = str(bounding_boxs.split()[2])
+        num3 = str(height - int(bouding.split()[3]))
+        new_pd_data.append({"ID": id, "Detection" : " ".join((num, num1, num2, num3))})
+    
+    output_csv_path = outputpath + "updown_label.csv"
+    new_pd_data.to_csv(output_csv_path)
+
+    for id in ids:
+        name = re.split(r".jpg|.png|.jpeg", id)[0]
+        print(outputpath + name + "-updown.jpg")
+        cv2.imwrite(newImages[id])
 
 def image_roate(imageDir_path = "", trainLabel_path = "", outputpath="", roate=90):
     """
