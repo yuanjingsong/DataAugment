@@ -36,7 +36,7 @@ def image_flip(imageDir_path="", trainLabel_path="", outputpath="") :
             num1 = str(bounding.split()[1])
             num2 = str(width - int(bounding.split()[2]))
             num3 = str(bounding.split()[3])
-            new_pd_data.append({"ID":id+"-flipped", "Detection" : " ".join((num, num1, num2, num3))})
+            new_pd_data.append({"ID":id+"-flipped.jpg", "Detection" : " ".join((num, num1, num2, num3))})
 
     output_csv_path = outputpath + "flipped_label.csv"
     np.DataFrame(new_pd_data).to_csv(output_csv_path) 
@@ -70,11 +70,11 @@ def image_udflip(imageDir_path="", trainLabel_path="", outputpath="") :
         for bounding in bounding_boxs[id]:
             if (id+"-updown") not in newBounding_boxes:
                 newBounding_boxes[id+"-updown"] = []
-        num = str(bounding_boxs.split()[0])
-        num1 = str(height - int(bounding.split()[1]))
-        num2 = str(bounding_boxs.split()[2])
-        num3 = str(height - int(bouding.split()[3]))
-        new_pd_data.append({"ID": id+"-updown", "Detection" : " ".join((num, num1, num2, num3))})
+            num = str(bounding.split()[0])
+            num1 = str(height - int(bounding.split()[1]))
+            num2 = str(bounding.split()[2])
+            num3 = str(height - int(bounding.split()[3]))
+            new_pd_data.append({"ID": id+"-updown.jpg", "Detection" : " ".join((num, num1, num2, num3))})
     
 
     output_csv_path = outputpath + "updown_label.csv"
@@ -138,7 +138,7 @@ def image_rotate(imageDir_path = "", trainLabel_path = "", outputpath="", degree
             newBox = []
             for item in transfer(box):
                 newBox.append(int(item))
-            new_pd_data.append({"ID": id+"-rotated" , "Detection": "".join((newBox[0], newBox[1], newBox[2], newBox[3]))})
+            new_pd_data.append({"ID": id+"-rotated.jpg" , "Detection": "".join((newBox[0], newBox[1], newBox[2], newBox[3]))})
 
     
     output_csv_path = outputpath + "-rotated.csv"
@@ -160,6 +160,37 @@ def image_saltNoise(imageDir_path = "", trainLabel_path = "", outputpath = ""):
         outputpath: the path of the flipped pic and train label
     """
 
+    def salt(image, n):
+        height, width = image.shape[:2]
+        for k in range(n):
+            x = int(np.random.random() * height)
+            y = int(np.random.random() * width)
+            if img.ndim == 2:
+                img[x,y] = 255
+            else:
+                img[x, y, 0] = 255
+                img[x, y, 1] = 255
+                img[x, y, 2] = 255
+        return img
+
+    bounding_boxs = get_bounding_box(trainLabel_path)
+    image_data = read_images(imageDir_path)
+    ids = get_ids(imageDir_path)
+
+    new_pd_data = []
+
+    for id in ids:
+        salt(image_data[id], 5000)
+        for box in bounding_boxs[id]:
+            new_pd_data.append({"ID": id+"-salt.jpg", "Detection" : box})
+
+    output_csv_path = outputpath + "-salt.csv"
+    np.DataFrame(new_pd_data).to_csv(output_csv_path)
+
+    for id in ids:
+        name = re.split(r".jpg|.png|.jpeg", id)[0]
+        print(outputpath + name + "-salt.jpg")
+        cv2.imwrite(image_data[id], outputpath + name+"-salt.jpg")
 
 def image_GaussianNoise(imageDir_path = "", trainLabel_path = "", outputpath = ""):
     """
@@ -171,26 +202,20 @@ def image_GaussianNoise(imageDir_path = "", trainLabel_path = "", outputpath = "
         outputpath: the path of the flipped pic and train label
     """
 
-def image_moveUp(imageDir_path = "", trainLabel_path = "", outputpath = "", distance = 0):
+def image_moveVertical(imageDir_path = "", trainLabel_path = "", outputpath = "", distance = 0):
     """
-    move up ur pic with the distance
-    """
+    move ur pic with the distance vertical
+    distance > 0 move Up
+    distance < 0 move Down
 
-def image_moveDown(imageDir_path = "", trainLabel_path ="", outputpath= "", distance = 0):
-    """
-    move down ur pic with distance 
     """
 
 def image_moveLeft(imageDir_path = "", trainLabel_path = "", outputpath = "", distance = 0):
     """
-    move left ur pic with distance
+    move left ur pic with distance horizontal
+    distance > 0 move right
+    distance < 0 move left
     """
-
-def image_moveRight(imageDir_path = "", trainLabel_path = "", outputpath ="", distance = 0):
-    """
-    move right ur pic with distance
-    """
-
 
 def read_images(imageDir_path):
     """
