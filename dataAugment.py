@@ -28,23 +28,23 @@ def image_flip(imageDir_path="", trainLabel_path="", outputpath="") :
 
     for id in ids:
         width = image_data[id].shape[1]
-        newImages[id+"flipped"] = np.fliplr(image_data[id])
+        newImages[id+"-flipped"] = np.fliplr(image_data[id])
         for bounding in bounding_boxs[id]:
-            if (id+"flipped") not in newBounding_boxes:
-                newBounding_boxes[id+"flipped"] = []
+            if (id+"-flipped") not in newBounding_boxes:
+                newBounding_boxes[id+"-flipped"] = []
             num = str(width - int(bounding.split()[0]))
             num1 = str(bounding.split()[1])
             num2 = str(width - int(bounding.split()[2]))
             num3 = str(bounding.split()[3])
-            new_pd_data.append({"ID":id, "Detection" : " ".join((num, num1, num2, num3))})
+            new_pd_data.append({"ID":id+"-flipped", "Detection" : " ".join((num, num1, num2, num3))})
 
     output_csv_path = outputpath + "flipped_label.csv"
-    new_pd_data.to_csv(output_csv_path) 
+    np.DataFrame(new_pd_data).to_csv(output_csv_path) 
 
     for id in ids:
         name = re.split(r".jpg|.png|.jpeg ", id)[0]
         print(outputpath + name + "-flipped.jpg")
-        cv2.imwrite(newImages[id+"flipped"], outputpath+name+"-flipped.jpg")
+        cv2.imwrite(newImages[id+"-flipped"], outputpath+name+"-flipped.jpg")
 
 
 def image_udflip(imageDir_path="", trainLabel_path="", outputpath="") :
@@ -74,26 +74,81 @@ def image_udflip(imageDir_path="", trainLabel_path="", outputpath="") :
         num1 = str(height - int(bounding.split()[1]))
         num2 = str(bounding_boxs.split()[2])
         num3 = str(height - int(bouding.split()[3]))
-        new_pd_data.append({"ID": id, "Detection" : " ".join((num, num1, num2, num3))})
+        new_pd_data.append({"ID": id+"-updown", "Detection" : " ".join((num, num1, num2, num3))})
     
+
     output_csv_path = outputpath + "updown_label.csv"
-    new_pd_data.to_csv(output_csv_path)
+    np.DataFrame(new_pd_data).to_csv(output_csv_path)
 
     for id in ids:
         name = re.split(r".jpg|.png|.jpeg", id)[0]
         print(outputpath + name + "-updown.jpg")
-        cv2.imwrite(newImages[id])
+        cv2.imwrite(newImages[id+"-updown"], outputpath + name + "-updown.jpg")
 
-def image_roate(imageDir_path = "", trainLabel_path = "", outputpath="", roate=90):
+def image_rotate(imageDir_path = "", trainLabel_path = "", outputpath="", degree=90):
     """
-    roate the image clockwise 
-    output pic end with "-roated"
+    rotate the image clockwise with a degree 
+    output pic end with "-rotated"
     Args:
         imageDir_path: the path of the train pic dir
         trainLabel_path: the path of the train label path
         outputpath: the path of the flipped pic and train label
-        roate: the degree pic will roate
+        degree: the degree pic will roate
     """
+    bounding_boxs = get_bounding_box(trainLabel_path)
+    image_data = read_images(imageDir_path)
+    ids = get_ids(imageDir_path)
+
+    newImages = {}
+    new_pd_data = {}
+
+    def transfer(box):
+        lst = [int (item) for item in box.split()]
+        lst1 = [lst[:2], [lst[2], lst[1]], lst[2:4], [lst[0], lst[3]]]
+        ones = [1, 1, 1, 1]
+        newMat = []
+        for point in np.c_[lst1, ones]:
+            newMat.append(M.dot(point))
+        #minX should bigger than you pic width and height
+        minX = 10000
+        maxX = -1
+        minY = minX
+        maxY = maxX
+
+        for  item in newMat:
+            minX = min(item[0], minX)
+            maxX = max(item[0], maxX)
+            minY = min(item[1], minY)
+            maxY = min(item[1], maxY)
+
+        return  np.array([minX, minY, maxX, maxY])
+
+    for id in ids:
+        cols, rows = image_data[id].shape[:2]
+        """
+        the first para is the rotate point, second para is the degree
+        third para is the scale riot
+        """
+        M = cv2.getRotationMatrix2D((cols/2, rows/2), degree, 0.5)
+        #rotate the pic
+        newImages[id+"-rotated"] = cv2.warpAffine(image_data[id], M, (cols, rows))
+
+        #transfer the box
+        for box in bounding_boxs[id]:
+            newBox = []
+            for item in transfer(box):
+                newBox.append(int(item))
+            new_pd_data.append({"ID": id+"-rotated" , "Detection": "".join((newBox[0], newBox[1], newBox[2], newBox[3]))})
+
+    
+    output_csv_path = outputpath + "-rotated.csv"
+    np.DataFrame(new_pd_data).to_csv(output_csv_path)
+
+    for id in ids:
+        name = re.split(r".jpg|.png|.jpeg", id)[0]
+        print(outputpath + name + "-rotated.jpg")
+        cv2.imwrite(newImages[id+"-rotated"], outputpath + name+"-rotated.jpg")
+
 
 def image_saltNoise(imageDir_path = "", trainLabel_path = "", outputpath = ""):
     """
